@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Operaciones — Menú</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0d1420;
+    --bg-panel: #141d2b;
+    --bg-panel-2: #1a2536;
+    --line: #263449;
+    --ink: #e7edf5;
+    --ink-dim: #8fa1b8;
+    --ink-faint: #5c728c;
+    --amber: #f0a83c;
+    --amber-dim: #7a5a26;
+    --vtr: #4f8ff0;
+    --movistar: #14c48b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(240,168,60,0.08), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(79,143,240,0.06), transparent 45%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .strip{
+    background:repeating-linear-gradient(90deg, var(--amber) 0 18px, transparent 18px 34px);
+    height:5px;width:100%;
+  }
+
+  .wrap{max-width:980px;margin:0 auto;padding:0 28px;flex:1;display:flex;flex-direction:column;}
+
+  header{padding:48px 0 40px;border-bottom:1px solid var(--line);}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;
+    color:var(--amber);text-transform:uppercase;margin-bottom:10px;
+  }
+  h1{
+    font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:46px;
+    line-height:1;margin:0 0 12px;letter-spacing:.01em;text-transform:uppercase;
+  }
+  h1 span{color:var(--amber);}
+  header p{color:var(--ink-dim);font-size:15px;max-width:560px;line-height:1.6;margin:0;}
+
+  .cards{
+    display:grid;grid-template-columns:1fr 1fr;gap:20px;
+    padding:44px 0;
+  }
+  @media(max-width:720px){.cards{grid-template-columns:1fr;} h1{font-size:36px;}}
+
+  .card{
+    position:relative;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:32px 28px;
+    text-decoration:none;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    overflow:hidden;
+    transition:border-color .18s ease, transform .18s ease;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+  }
+  .card.vtr::before{background:var(--vtr);}
+  .card.movistar::before{background:var(--movistar);}
+  .card:hover{transform:translateY(-3px);}
+  .card.vtr:hover{border-color:var(--vtr);}
+  .card.movistar:hover{border-color:var(--movistar);}
+
+  .card .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;padding:4px 10px;border-radius:12px;width:fit-content;
+  }
+  .card.vtr .tag{background:rgba(79,143,240,.15);color:var(--vtr);}
+  .card.movistar .tag{background:rgba(20,196,139,.15);color:var(--movistar);}
+
+  .card h2{
+    font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.01em;margin:0;
+  }
+  .card p{color:var(--ink-dim);font-size:13.5px;line-height:1.55;margin:0;}
+
+  .card .go{
+    margin-top:auto;padding-top:10px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);
+    display:flex;align-items:center;gap:6px;
+  }
+  .card.vtr:hover .go{color:var(--vtr);}
+  .card.movistar:hover .go{color:var(--movistar);}
+  .go .arrow{transition:transform .18s ease;}
+  .card:hover .arrow{transform:translateX(4px);}
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:20px 0 32px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+</style>
+</head>
+<body>
+<div class="strip"></div>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Panel de operaciones</div>
+    <h1>Centro de <span>Control</span></h1>
+    <p>Selecciona el módulo con el que quieres trabajar. Cada uno guarda su propia información de forma independiente.</p>
+  </header>
+
+  <div class="cards">
+    <a href="despachos.html" class="card vtr">
+      <span class="tag">Logística</span>
+      <h2>Despachos VTR</h2>
+      <p>Panel de despachos, planificación semanal, ventanas de entrega y facturación para VTR / Claro.</p>
+      <span class="go">Entrar al panel <span class="arrow">→</span></span>
+    </a>
+
+    <a href="inventario.html" class="card movistar">
+      <span class="tag">Bodega</span>
+      <h2>Control de Inventario Movistar</h2>
+      <p>Registro de entradas y salidas de mercancía, stock por SKU, historial y registro mensual.</p>
+      <span class="go">Entrar al panel <span class="arrow">→</span></span>
+    </a>
+  </div>
+
+  <footer>
+    <span>Panel de operaciones — uso interno</span>
+    <span id="date"></span>
+  </footer>
+</div>
+<script>
+  document.getElementById('date').textContent = new Date().toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric' });
+</script>
+</body>
+</html>

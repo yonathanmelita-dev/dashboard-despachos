@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centro de Despachos — Menú principal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg: #0d1420;
+  --bg-panel: #141d2b;
+  --bg-panel-2: #1a2536;
+  --line: #263449;
+  --line-soft: #1e2a3c;
+  --ink: #e7edf5;
+  --ink-dim: #8fa1b8;
+  --ink-faint: #5c728c;
+  --amber: #f0a83c;
+  --amber-dim: #7a5a26;
+  --vtr: #4f8ff0;
+  --claro: #e0503a;
+  --green: #4cc99a;
+  --radius: 3px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    linear-gradient(180deg, rgba(240,168,60,0.03), transparent 200px),
+    var(--bg);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+}
+::selection{background:var(--amber-dim);color:#fff;}
+
+.manifest-strip{
+  background:repeating-linear-gradient(90deg, var(--amber) 0 18px, transparent 18px 34px);
+  height:5px;width:100%;
+}
+
+.wrap{max-width:960px;margin:0 auto;padding:0 28px 60px;}
+
+header.top{
+  padding:40px 0 30px;
+  border-bottom:1px solid var(--line);
+}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:.18em;color:var(--amber);
+  text-transform:uppercase;margin-bottom:8px;
+}
+h1{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;font-size:52px;line-height:.95;margin:0;
+  letter-spacing:.01em;
+  text-transform:uppercase;
+}
+h1 span{color:var(--amber);}
+.sub{color:var(--ink-dim);font-size:15px;margin-top:12px;max-width:560px;line-height:1.6;}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
+  margin-top:44px;
+}
+.card{
+  display:block;
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:28px 26px;
+  text-decoration:none;
+  color:var(--ink);
+  transition:.15s;
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--amber);
+  transform:scaleX(0);
+  transform-origin:left;
+  transition:.2s;
+}
+.card:hover{border-color:var(--amber);background:var(--bg-panel-2);}
+.card:hover::before{transform:scaleX(1);}
+.card .tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;letter-spacing:.14em;color:var(--ink-faint);
+  text-transform:uppercase;margin-bottom:10px;
+}
+.card h2{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;font-size:26px;margin:0 0 10px;
+  text-transform:uppercase;letter-spacing:.01em;
+}
+.card p{
+  color:var(--ink-dim);font-size:13.5px;line-height:1.55;margin:0 0 16px;
+}
+.card .go{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);
+  display:inline-flex;align-items:center;gap:6px;
+}
+
+footer{
+  margin-top:60px;padding-top:20px;border-top:1px solid var(--line);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);
+}
+</style>
+</head>
+<body>
+<div class="manifest-strip"></div>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Operaciones · Panel general</div>
+    <h1>Centro de <span>Despachos</span></h1>
+    <div class="sub">Selecciona el panel al que quieres entrar. Los datos se ven igual para todos; para cargar información nueva necesitas iniciar sesión dentro de cada panel.</div>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="despachos.html">
+      <div class="tag">Despachos · Facturación</div>
+      <h2>Centro de Despachos</h2>
+      <p>Panel de control de remozamiento VTR / Claro — despachos, planificación semanal, ventanas de entrega y facturación.</p>
+      <span class="go">Entrar →</span>
+    </a>
+
+    <a class="card" href="inventario.html">
+      <div class="tag">Movistar · Stock</div>
+      <h2>Control de Inventario</h2>
+      <p>Registro de entradas y salidas de mercancía, control de stock por SKU e historial de movimientos.</p>
+      <span class="go">Entrar →</span>
+    </a>
+  </div>
+
+  <footer>Centro de Despachos · menú principal</footer>
+</div>
+</body>
+</html>

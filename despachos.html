@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centro de Despachos — Panel de Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{
+  --bg: #0d1420;
+  --bg-panel: #141d2b;
+  --bg-panel-2: #1a2536;
+  --line: #263449;
+  --line-soft: #1e2a3c;
+  --ink: #e7edf5;
+  --ink-dim: #8fa1b8;
+  --ink-faint: #5c728c;
+  --amber: #f0a83c;
+  --amber-dim: #7a5a26;
+  --vtr: #4f8ff0;
+  --claro: #e0503a;
+  --green: #4cc99a;
+  --red: #e0503a;
+  --radius: 3px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    linear-gradient(180deg, rgba(240,168,60,0.03), transparent 200px),
+    var(--bg);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+}
+::selection{background:var(--amber-dim);color:#fff;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--bg-panel);}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-faint);}
+
+.wrap{max-width:1360px;margin:0 auto;padding:0 28px 60px;}
+
+/* ===== HEADER / MANIFEST STRIP ===== */
+.manifest-strip{
+  background:repeating-linear-gradient(90deg, var(--amber) 0 18px, transparent 18px 34px);
+  height:5px;width:100%;
+}
+header.top{
+  padding:26px 0 22px;
+  border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+}
+.brand-block .eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:.18em;color:var(--amber);
+  text-transform:uppercase;margin-bottom:6px;
+}
+.brand-block h1{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;font-size:44px;line-height:.95;margin:0;
+  letter-spacing:.01em;
+  text-transform:uppercase;
+}
+.brand-block h1 span{color:var(--amber);}
+.brand-block .sub{color:var(--ink-dim);font-size:14px;margin-top:8px;max-width:520px;line-height:1.5;}
+
+.header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+.status-line{
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);
+  display:flex;align-items:center;gap:8px;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+.upload-row{display:flex;gap:8px;align-items:center;}
+.btn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;letter-spacing:.04em;
+  padding:10px 16px;border-radius:var(--radius);
+  border:1px solid var(--line);
+  background:var(--bg-panel-2);color:var(--ink);
+  cursor:pointer;transition:.15s;
+  display:inline-flex;align-items:center;gap:8px;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--amber);color:var(--amber);}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#1a1204;font-weight:600;}
+.btn.primary:hover{background:#ffb84f;color:#1a1204;}
+.btn.ghost{background:transparent;}
+input[type=file]{display:none;}
+
+/* ===== TABS ===== */
+nav.tabs{
+  display:flex;gap:2px;margin-top:0;
+  border-bottom:1px solid var(--line);
+  overflow-x:auto;
+}
+nav.tabs button{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:17px;font-weight:600;letter-spacing:.02em;
+  text-transform:uppercase;
+  background:none;border:none;color:var(--ink-faint);
+  padding:16px 20px 13px;cursor:pointer;
+  border-bottom:3px solid transparent;
+  white-space:nowrap;
+  transition:.15s;
+}
+nav.tabs button .num{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  opacity:.6;margin-right:6px;
+}
+nav.tabs button:hover{color:var(--ink);}
+nav.tabs button.active{color:var(--amber);border-bottom-color:var(--amber);}
+
+section.panel{display:none;padding-top:28px;animation:fadein .25s ease;}
+section.panel.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== KPI CARDS (ticket style) ===== */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px;}
+.kpi-card{
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  position:relative;
+  overflow:hidden;
+}
+.kpi-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber);
+}
+.kpi-card .lbl{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;
+}
+.kpi-card .val{
+  font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;line-height:1;
+  color:var(--ink);
+}
+.kpi-card .val .unit{font-size:16px;color:var(--ink-dim);font-weight:500;margin-left:4px;}
+.kpi-card .delta{font-size:12px;margin-top:6px;color:var(--ink-dim);}
+.kpi-card .delta.up{color:var(--green);}
+.kpi-card .delta.down{color:var(--claro);}
+
+/* ===== GRID / PANELS ===== */
+.grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+.card{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px;
+}
+.card h3{
+  font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.02em;margin:0 0 14px;color:var(--ink);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.card h3 small{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);
+  text-transform:none;letter-spacing:0;font-weight:400;
+}
+.chart-wrap{position:relative;height:280px;}
+.chart-wrap.short{height:220px;}
+.chart-wrap.tall{height:340px;}
+
+/* ===== FILTERS ===== */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
+.filters select, .filters input[type=text]{
+  background:var(--bg-panel-2);border:1px solid var(--line);color:var(--ink);
+  padding:8px 12px;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:12px;
+}
+.filters label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;margin-right:4px;}
+.filter-group{display:flex;align-items:center;gap:6px;}
+.filters .reset{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);cursor:pointer;
+  border:1px dashed var(--amber-dim);padding:8px 12px;border-radius:var(--radius);background:none;
+}
+.filters .reset:hover{border-color:var(--amber);}
+
+/* ===== TABLE ===== */
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:720px;}
+thead th{
+  background:var(--bg-panel-2);color:var(--ink-faint);
+  font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;
+  text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;
+}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--line-soft);color:var(--ink-dim);white-space:nowrap;}
+tbody tr:hover{background:var(--bg-panel-2);}
+tbody tr:hover td{color:var(--ink);}
+.tag{
+  display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;
+  font-family:'IBM Plex Mono',monospace;font-weight:500;
+}
+.tag.vtr{background:rgba(79,143,240,.15);color:var(--vtr);}
+.tag.claro{background:rgba(224,80,58,.15);color:var(--claro);}
+.tag.novalorado{background:rgba(240,168,60,.15);color:var(--amber);}
+.tag.valorado{background:rgba(76,201,154,.15);color:var(--green);}
+.pager{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);}
+.pager button{background:var(--bg-panel-2);border:1px solid var(--line);color:var(--ink);padding:6px 12px;border-radius:var(--radius);cursor:pointer;}
+.pager button:disabled{opacity:.35;cursor:not-allowed;}
+.pager button:hover:not(:disabled){border-color:var(--amber);}
+
+/* ===== PROGRESS BARS ===== */
+.progress-track{background:var(--bg-panel-2);border-radius:10px;height:8px;overflow:hidden;position:relative;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--amber-dim),var(--amber));border-radius:10px;transition:width .4s;}
+.plan-row{display:grid;grid-template-columns:70px 1fr 90px 60px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+.plan-row .neg{font-family:'IBM Plex Mono',monospace;font-size:10.5px;}
+.plan-row .prod{font-size:13px;color:var(--ink);}
+.plan-row .meta-val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-dim);text-align:right;}
+.plan-row .pct{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;color:var(--ink-dim);}
+.fc-group-title{display:flex;align-items:center;gap:8px;margin:18px 0 6px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--ink-dim);text-transform:uppercase;}
+.fc-group-title:first-child{margin-top:0;}
+.fc-prod-row{display:grid;grid-template-columns:1fr 110px 110px 110px 70px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);}
+.fc-prod-row .prod{font-size:13px;color:var(--ink);}
+.fc-prod-row .num{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;}
+.fc-prod-row .num .lbl2{display:block;font-size:9.5px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.03em;}
+
+/* ===== CALENDAR (Horarios) ===== */
+.week-select{display:flex;gap:8px;margin-bottom:20px;}
+.week-select button{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 16px;border-radius:var(--radius);
+  border:1px solid var(--line);background:var(--bg-panel-2);color:var(--ink-dim);cursor:pointer;
+}
+.week-select button.active{border-color:var(--amber);color:var(--amber);background:rgba(240,168,60,.08);}
+.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+@media(max-width:800px){.day-grid{grid-template-columns:repeat(2,1fr);}}
+.day-card{
+  background:var(--bg-panel-2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 14px;text-align:center;position:relative;min-height:150px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.day-card .dname{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.day-card .ddate{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;color:var(--ink);line-height:1;}
+.day-card .dmonth{font-size:10.5px;color:var(--ink-faint);margin-bottom:14px;}
+.day-card .slots{display:flex;flex-direction:column;gap:6px;margin-top:auto;width:100%;}
+.slot-tag{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;background:rgba(240,168,60,.12);
+  color:var(--amber);border:1px solid var(--amber-dim);border-radius:var(--radius);padding:5px 8px;
+}
+.slot-empty{font-size:11px;color:var(--ink-faint);opacity:.5;}
+
+/* ===== Comparativo (VIEW) ===== */
+.mini-total-card{
+  background:var(--bg-panel-2);border:1px dashed var(--line);border-radius:var(--radius);
+  padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:10px;
+}
+.mini-total-card .l{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);text-transform:uppercase;}
+.mini-total-card .r{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--amber);}
+
+.empty-state{
+  text-align:center;padding:50px 20px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;font-size:13px;
+}
+
+footer.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;font-size:10.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--bg-panel);border:1px solid var(--amber);
+  color:var(--ink);padding:14px 20px;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;z-index:999;
+  max-width:320px;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.error{border-color:var(--claro);}
+</style>
+</head>
+<script id="data-blob" type="application/json">{"despachos": {"headers": ["UA", "SERIE", "UA/CRUCE", "MODELO", "SKU", "ESTADO", "CAJA", "PALLET", "GUIA", "ESTADO SAP", "COMPARACION", "L. CMAC", "L. MTAMAC ", "CENTRO", "ALAMACEN", "REPETIDA 1", "REPETIDA 2", "NEGOCIO", "MES", "FAMILIA", "NIVEL", "SEMANA", "FECHA", "VALOR FAMILIA", "FACTURACION"], "rows": []}, "planificacion": {"fields": ["negocio", "producto", "meta2026", "wk28_meta", "wk28_desp", "wk29_meta", "wk29_desp", "wk30_meta", "wk30_desp", "wk31_meta", "wk31_desp", "total_desp", "faltante", "pct"], "rows": [], "total": [null, null, null, null, null, null, null, null, null, null, null, null, null, null]}, "horarios": [], "facturacion": {"header": ["NEGOCIO", "NIVEL", "FACTURACION", "Cuenta de UA", "Suma de FACTURACION", "Cuenta de FACTURACION"], "rows": [], "total": [null, null, null, null, null, null]}}</script>
+<body>
+<div class="manifest-strip"></div>
+<div class="wrap">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);text-decoration:none;padding:14px 0 0;">← Menú principal</a>
+  <header class="top">
+    <div class="brand-block">
+      <div class="eyebrow">Operaciones · Agosto 2026</div>
+      <h1>Centro de <span>Despachos</span></h1>
+      <div class="sub">Panel de control de remozamiento VTR / Claro — despachos, planificación semanal, ventanas de entrega y facturación.</div>
+    </div>
+    <div class="header-controls">
+      <div class="status-line"><span class="status-dot" id="statusDot"></span><span id="statusText">Datos originales cargados · <span id="rowCount">4350</span> registros</span></div>
+      <div class="upload-row">
+        <button class="btn ghost" id="btn-login">Iniciar sesión</button>
+        <label class="btn primary" for="fileInput">⭱ Cargar archivo Excel</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+        <button class="btn ghost" id="resetBtn">↺ Restaurar original</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="resumen"><span class="num">01</span>Despachos</button>
+    <button class="tab-btn" data-tab="planificacion"><span class="num">02</span>Planificación</button>
+    <button class="tab-btn" data-tab="facturacion"><span class="num">03</span>Facturación</button>
+    <button class="tab-btn" data-tab="horarios"><span class="num">04</span>Horarios de Entrega</button>
+  </nav>
+
+  <!-- TAB 1: DESPACHOS -->
+  <section class="panel active" id="panel-resumen">
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Forecast total por cliente <small>despachado acumulado vs. pendiente por despachar</small></h3>
+      <div class="chart-wrap short"><canvas id="chartForecast"></canvas></div>
+      <div class="grid-3" id="forecastCards" style="margin-top:16px; margin-bottom:0;"></div>
+      <div id="forecastProductBreakdown" style="margin-top:20px;"></div>
+    </div>
+    <div class="kpi-row" id="kpiRow"></div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Despachos por fecha <small>unidades / día</small></h3>
+        <div class="chart-wrap"><canvas id="chartFecha"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Negocio <small>VTR vs Claro</small></h3>
+        <div class="chart-wrap"><canvas id="chartNegocio"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Unidades por familia <small>desglosado por negocio</small></h3>
+      <div class="chart-wrap"><canvas id="chartFamilia"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Detalle de despachos <small id="tableCount"></small></h3>
+      <div class="filters">
+        <div class="filter-group"><label>Negocio</label><select id="fNegocio"><option value="">Todos</option></select></div>
+        <div class="filter-group"><label>Familia</label><select id="fFamilia"><option value="">Todas</option></select></div>
+        <div class="filter-group"><label>Estado</label><select id="fEstado"><option value="">Todos</option></select></div>
+        <div class="filter-group"><label>Pallet</label><select id="fPallet"><option value="">Todos</option></select></div>
+        <div class="filter-group"><input type="text" id="fSearch" placeholder="Buscar UA / serie / modelo…"></div>
+        <button class="reset" id="fReset">Limpiar filtros</button>
+      </div>
+      <div class="table-scroll">
+        <table id="despachosTable">
+          <thead><tr>
+            <th>UA</th><th>Modelo</th><th>SKU</th><th>Estado</th><th>Pallet</th><th>Guía</th>
+            <th>Negocio</th><th>Familia</th><th>Nivel</th><th>Semana</th><th>Fecha</th>
+          </tr></thead>
+          <tbody id="despachosBody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <span id="pagerInfo"></span>
+        <div>
+          <button id="prevPage">‹ Anterior</button>
+          <button id="nextPage">Siguiente ›</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: PLANIFICACION -->
+  <section class="panel" id="panel-planificacion">
+    <div class="kpi-row" id="planKpiRow"></div>
+    <div class="card">
+      <h3>Detalle por producto <small>pendiente por despachar en la semana seleccionada</small></h3>
+      <div class="week-select" id="planWeekSelect"></div>
+      <div id="planWeekNote" style="display:none; background:rgba(240,168,60,.08); border:1px dashed var(--amber-dim); color:var(--amber); font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:10px 14px; border-radius:3px; margin-bottom:14px;"></div>
+      <div id="planList"></div>
+    </div>
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Cumplimiento semanal <small>despachado vs meta</small></h3>
+        <div class="chart-wrap"><canvas id="chartPlanWeeks"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>% de avance por semana</h3>
+        <div class="chart-wrap"><canvas id="chartPlanPct"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: FACTURACION -->
+  <section class="panel" id="panel-facturacion">
+    <div class="kpi-row" id="factKpiRow"></div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Facturación por negocio <small>suma valorizada</small></h3>
+        <div class="chart-wrap"><canvas id="chartFactNegocio"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Participación por precio / nivel <small>% del total facturado</small></h3>
+        <div class="chart-wrap"><canvas id="chartFactPart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Detalle de facturación <small>negocio / nivel / precio unitario</small></h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Negocio</th><th>Nivel</th><th>Facturación unit.</th><th>Cuenta UA</th><th>Suma facturación</th><th>% participación</th></tr></thead>
+          <tbody id="factBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: HORARIOS -->
+  <section class="panel" id="panel-horarios">
+    <div class="week-select" id="weekSelect"></div>
+    <div class="card">
+      <h3>Ventanas de entrega <small id="weekLabel"></small></h3>
+      <div class="day-grid" id="dayGrid"></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Centro de Despachos · panel generado a partir de despachos.xlsx</span>
+    <span id="lastUpdate">Última actualización: —</span>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ===================== GLOBAL STATE =====================
+let RAW = JSON.parse(document.getElementById('data-blob').textContent);
+let ORIGINAL = JSON.parse(JSON.stringify(RAW));
+
+const COLORS = {
+  vtr: '#4f8ff0',
+  claro: '#e0503a',
+  amber: '#f0a83c',
+  green: '#4cc99a',
+  ink: '#e7edf5',
+  inkDim: '#8fa1b8',
+  grid: '#263449',
+  palette: ['#f0a83c','#4f8ff0','#e0503a','#4cc99a','#a084e8','#e8c34a','#5cc8e8','#e87ca0']
+};
+
+Chart.register(ChartDataLabels);
+Chart.defaults.color = COLORS.inkDim;
+Chart.defaults.borderColor = COLORS.grid;
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.datalabels.display = false; // opt-in per chart
+
+const dl = (opts) => Object.assign({
+  display: true,
+  color: COLORS.ink,
+  font: { family: "'IBM Plex Mono', monospace", size: 11, weight: '600' },
+  formatter: (v) => v ? fmtNum(v) : '',
+}, opts);
+
+let charts = {};
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+function fmtNum(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return Math.round(n).toLocaleString('es-CL');
+}
+function fmtMoney(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return '$' + Math.round(n).toLocaleString('es-CL');
+}
+function fmtPct(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return (n*100).toFixed(1) + '%';
+}
+function toast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 3800);
+}
+
+// ===================== TABS =====================
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ===================== DESPACHOS TAB =====================
+let despachosState = { page:0, pageSize:25, filtered:[] };
+
+function despIdx(){
+  const h = RAW.despachos.headers;
+  const idx = {};
+  h.forEach((name,i)=>{ idx[name.trim()] = i; });
+  return idx;
+}
+
+function populateSelect(sel, values){
+  const el = document.getElementById(sel);
+  const current = el.value;
+  el.innerHTML = '<option value="">'+(sel==='fNegocio'?'Todos':sel==='fFamilia'?'Todas':sel==='fEstado'?'Todos':'Todos')+'</option>';
+  values.forEach(v=>{
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    el.appendChild(o);
+  });
+  if(values.includes(current)) el.value = current;
+}
+
+function renderForecastCard(despachadoVTR, despachadoCLARO){
+  const plan = RAW.planificacion;
+  const fields = plan.fields;
+  const fi = {}; fields.forEach((n,i)=>fi[n]=i);
+  const forecast = {};
+  plan.rows.forEach(r=>{
+    const neg = r[fi['negocio']];
+    forecast[neg] = (forecast[neg]||0) + (r[fi['meta2026']]||0);
+  });
+
+  const despachadoByNeg = { VTR: despachadoVTR, CLARO: despachadoCLARO };
+  const negocios = Object.keys(forecast);
+
+  const chartData = negocios.map(neg=>{
+    const fc = forecast[neg] || 0;
+    const desp = despachadoByNeg[neg] || 0;
+    const pend = Math.max(fc - desp, 0);
+    return { neg, forecast: fc, despachado: desp, pendiente: pend, avance: fc? desp/fc : 0 };
+  });
+
+  destroyChart('forecast');
+  charts.forecast = new Chart(document.getElementById('chartForecast'), {
+    type:'bar',
+    data:{ labels:chartData.map(x=>x.neg), datasets:[
+      { label:'Despachado', data:chartData.map(x=>x.despachado), backgroundColor:COLORS.green, borderRadius:3, maxBarThickness:60 },
+      { label:'Pendiente', data:chartData.map(x=>x.pendiente), backgroundColor:COLORS.amber, borderRadius:3, maxBarThickness:60 },
+    ]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{boxWidth:12}}, datalabels:dl({color:'#0d1420', font:{family:"'IBM Plex Mono', monospace", size:11, weight:'700'}, formatter:(v)=> v>0 ? fmtNum(v) : ''})}, scales:{ x:{stacked:true, grid:{color:COLORS.grid}}, y:{stacked:true, grid:{display:false}} } }
+  });
+
+  const forecastTotal = chartData.reduce((s,x)=>s+x.forecast,0);
+  const despachadoTotal = chartData.reduce((s,x)=>s+x.despachado,0);
+  const pendienteTotal = chartData.reduce((s,x)=>s+x.pendiente,0);
+
+  const cardHtml = (label, x, color) => `
+    <div class="kpi-card" style="${color?`--accent:${color}`:''}">
+      <div class="lbl">${label}</div>
+      <div class="val" style="font-size:26px;">${fmtNum(x.forecast)}<span class="unit">forecast</span></div>
+      <div class="delta up" style="color:${COLORS.green}">Despachado: ${fmtNum(x.despachado)} (${fmtPct(x.avance)})</div>
+      <div class="delta" style="color:${COLORS.amber}">Pendiente: ${fmtNum(x.pendiente)}</div>
+    </div>`;
+
+  let html = '';
+  chartData.forEach(x=>{ html += cardHtml(x.neg, x, x.neg==='VTR'?COLORS.vtr:COLORS.claro); });
+  html += cardHtml('TOTAL', { forecast:forecastTotal, despachado:despachadoTotal, pendiente:pendienteTotal, avance: forecastTotal? despachadoTotal/forecastTotal:0 }, COLORS.amber);
+  document.getElementById('forecastCards').innerHTML = html;
+
+  // ---- Desglose por producto dentro de cada cliente ----
+  const prodRows = plan.rows.map(r=>{
+    const neg = r[fi['negocio']];
+    const forecast = r[fi['meta2026']] || 0;
+    const despachado = r[fi['total_desp']] || 0;
+    const pendiente = r[fi['faltante']] != null ? r[fi['faltante']] : Math.max(forecast - despachado, 0);
+    const avance = forecast ? despachado/forecast : 0;
+    return { neg, producto:r[fi['producto']], forecast, despachado, pendiente, avance };
+  });
+
+  let bhtml = '';
+  negocios.forEach(neg=>{
+    const rowsForNeg = prodRows.filter(x=>x.neg===neg).sort((a,b)=>b.forecast-a.forecast);
+    if(!rowsForNeg.length) return;
+    bhtml += `<div class="fc-group-title"><span class="tag ${neg==='VTR'?'vtr':'claro'}">${neg}</span> Desglose por producto</div>`;
+    bhtml += `<div class="fc-prod-row" style="border-bottom:1px solid var(--line-soft); opacity:.6;">
+      <span class="prod">Producto</span>
+      <span class="num">Forecast</span>
+      <span class="num">Despachado</span>
+      <span class="num">Pendiente</span>
+      <span class="num">Avance</span>
+    </div>`;
+    rowsForNeg.forEach(x=>{
+      const pendColor = x.pendiente > 0 ? COLORS.amber : COLORS.green;
+      bhtml += `<div class="fc-prod-row">
+        <span class="prod">${x.producto}<div class="progress-track" style="margin-top:6px;"><div class="progress-fill" style="width:${Math.min(100,x.avance*100)}%; background:${x.pendiente>0?'linear-gradient(90deg,var(--amber-dim),var(--amber))':'linear-gradient(90deg,#2d6b53,var(--green))'}"></div></div></span>
+        <span class="num">${fmtNum(x.forecast)}</span>
+        <span class="num" style="color:${COLORS.green}">${fmtNum(x.despachado)}</span>
+        <span class="num" style="color:${pendColor}">${fmtNum(Math.max(x.pendiente,0))}</span>
+        <span class="num">${fmtPct(x.avance)}</span>
+      </div>`;
+    });
+  });
+  document.getElementById('forecastProductBreakdown').innerHTML = bhtml;
+}
+
+function renderDespachosTab(){
+  const idx = despIdx();
+  const rows = RAW.despachos.rows;
+
+  // KPIs
+  const total = rows.length;
+  const vtr = rows.filter(r=>r[idx['NEGOCIO']]==='VTR').length;
+  const claro = rows.filter(r=>r[idx['NEGOCIO']]==='CLARO').length;
+  const familias = new Set(rows.map(r=>r[idx['FAMILIA']]).filter(Boolean));
+  const guias = new Set(rows.map(r=>r[idx['GUIA']]).filter(Boolean));
+
+  document.getElementById('rowCount').textContent = total;
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi-card"><div class="lbl">Total unidades</div><div class="val">${fmtNum(total)}</div></div>
+    <div class="kpi-card"><div class="lbl">VTR</div><div class="val" style="color:${COLORS.vtr}">${fmtNum(vtr)}</div></div>
+    <div class="kpi-card"><div class="lbl">Claro</div><div class="val" style="color:${COLORS.claro}">${fmtNum(claro)}</div></div>
+    <div class="kpi-card"><div class="lbl">Familias activas</div><div class="val">${familias.size}</div></div>
+    <div class="kpi-card"><div class="lbl">Guías de despacho</div><div class="val">${guias.size}</div></div>
+  `;
+
+  renderForecastCard(vtr, claro);
+
+  // Chart: por fecha
+  const byFecha = {};
+  rows.forEach(r=>{
+    const f = r[idx['FECHA']];
+    if(!f) return;
+    byFecha[f] = (byFecha[f]||0)+1;
+  });
+  const fechas = Object.keys(byFecha).sort();
+  destroyChart('fecha');
+  charts.fecha = new Chart(document.getElementById('chartFecha'), {
+    type:'bar',
+    data:{ labels:fechas, datasets:[{ label:'Unidades', data:fechas.map(f=>byFecha[f]), backgroundColor:COLORS.amber, borderRadius:3, maxBarThickness:46 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, datalabels:dl({anchor:'end', align:'top', color:COLORS.amber})}, scales:{ x:{grid:{display:false}}, y:{grid:{color:COLORS.grid}, beginAtZero:true, grace:'10%'} } }
+  });
+
+  // Chart: negocio donut
+  destroyChart('negocio');
+  charts.negocio = new Chart(document.getElementById('chartNegocio'), {
+    type:'doughnut',
+    data:{ labels:['VTR','Claro'], datasets:[{ data:[vtr,claro], backgroundColor:[COLORS.vtr, COLORS.claro], borderColor:'#141d2b', borderWidth:3 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{boxWidth:12, padding:16}}, datalabels:dl({color:'#0d1420', font:{family:"'IBM Plex Mono', monospace", size:13, weight:'700'}})} }
+  });
+
+  // Chart: familia por negocio (stacked)
+  const famSet = [...familias].sort();
+  const negocios = ['VTR','CLARO'];
+  const famData = negocios.map(neg=>{
+    return famSet.map(fam=> rows.filter(r=>r[idx['NEGOCIO']]===neg && r[idx['FAMILIA']]===fam).length );
+  });
+  destroyChart('familia');
+  charts.familia = new Chart(document.getElementById('chartFamilia'), {
+    type:'bar',
+    data:{ labels:famSet, datasets:[
+      { label:'VTR', data:famData[0], backgroundColor:COLORS.vtr, borderRadius:3, maxBarThickness:34 },
+      { label:'Claro', data:famData[1], backgroundColor:COLORS.claro, borderRadius:3, maxBarThickness:34 },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{boxWidth:12}}, datalabels:dl({color:'#0d1420', font:{family:"'IBM Plex Mono', monospace", size:10, weight:'700'}, formatter:(v)=> v>0 ? fmtNum(v) : ''})}, scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, grid:{color:COLORS.grid}} } }
+  });
+
+  // Filters population
+  populateSelect('fNegocio', [...new Set(rows.map(r=>r[idx['NEGOCIO']]).filter(Boolean))].sort());
+  populateSelect('fFamilia', [...familias].sort());
+  populateSelect('fEstado', [...new Set(rows.map(r=>r[idx['ESTADO']]).filter(Boolean))].sort());
+  populateSelect('fPallet', [...new Set(rows.map(r=>r[idx['PALLET']]).filter(Boolean))].sort());
+
+  applyDespachosFilters();
+}
+
+function applyDespachosFilters(){
+  const idx = despIdx();
+  const rows = RAW.despachos.rows;
+  const negocio = document.getElementById('fNegocio').value;
+  const familia = document.getElementById('fFamilia').value;
+  const estado = document.getElementById('fEstado').value;
+  const pallet = document.getElementById('fPallet').value;
+  const search = document.getElementById('fSearch').value.trim().toUpperCase();
+
+  let filtered = rows.filter(r=>{
+    if(negocio && r[idx['NEGOCIO']]!==negocio) return false;
+    if(familia && r[idx['FAMILIA']]!==familia) return false;
+    if(estado && r[idx['ESTADO']]!==estado) return false;
+    if(pallet && r[idx['PALLET']]!==pallet) return false;
+    if(search){
+      const hay = [r[idx['UA']], r[idx['SERIE']], r[idx['MODELO']], r[idx['SKU']]].join(' ').toUpperCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  despachosState.filtered = filtered;
+  despachosState.page = 0;
+  renderDespachosPage();
+}
+
+function renderDespachosPage(){
+  const idx = despIdx();
+  const { filtered, page, pageSize } = despachosState;
+  document.getElementById('tableCount').textContent = `${filtered.length.toLocaleString('es-CL')} registros filtrados`;
+  const start = page*pageSize;
+  const pageRows = filtered.slice(start, start+pageSize);
+  const tbody = document.getElementById('despachosBody');
+  if(pageRows.length===0){
+    tbody.innerHTML = `<tr><td colspan="11" class="empty-state">Sin resultados para estos filtros</td></tr>`;
+  } else {
+    tbody.innerHTML = pageRows.map(r=>{
+      const neg = r[idx['NEGOCIO']];
+      const est = r[idx['ESTADO']];
+      return `<tr>
+        <td>${r[idx['UA']]??''}</td>
+        <td>${r[idx['MODELO']]??''}</td>
+        <td>${r[idx['SKU']]??''}</td>
+        <td><span class="tag ${est==='VALORADO'?'valorado':'novalorado'}">${est??''}</span></td>
+        <td>${r[idx['PALLET']]??''}</td>
+        <td>${r[idx['GUIA']]??''}</td>
+        <td><span class="tag ${neg==='VTR'?'vtr':'claro'}">${neg??''}</span></td>
+        <td>${r[idx['FAMILIA']]??''}</td>
+        <td>${r[idx['NIVEL']]??''}</td>
+        <td>${r[idx['SEMANA']]??''}</td>
+        <td>${r[idx['FECHA']]??''}</td>
+      </tr>`;
+    }).join('');
+  }
+  const totalPages = Math.max(1, Math.ceil(filtered.length/pageSize));
+  document.getElementById('pagerInfo').textContent = `Página ${page+1} de ${totalPages}`;
+  document.getElementById('prevPage').disabled = page<=0;
+  document.getElementById('nextPage').disabled = page>=totalPages-1;
+}
+
+['fNegocio','fFamilia','fEstado','fPallet'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', applyDespachosFilters);
+});
+document.getElementById('fSearch').addEventListener('input', ()=>{
+  clearTimeout(window._searchTimer);
+  window._searchTimer = setTimeout(applyDespachosFilters, 200);
+});
+document.getElementById('fReset').addEventListener('click', ()=>{
+  document.getElementById('fNegocio').value='';
+  document.getElementById('fFamilia').value='';
+  document.getElementById('fEstado').value='';
+  document.getElementById('fPallet').value='';
+  document.getElementById('fSearch').value='';
+  applyDespachosFilters();
+});
+document.getElementById('prevPage').addEventListener('click', ()=>{
+  if(despachosState.page>0){ despachosState.page--; renderDespachosPage(); }
+});
+document.getElementById('nextPage').addEventListener('click', ()=>{
+  const totalPages = Math.ceil(despachosState.filtered.length/despachosState.pageSize);
+  if(despachosState.page<totalPages-1){ despachosState.page++; renderDespachosPage(); }
+});
+
+// ===================== PLANIFICACION TAB =====================
+let planState = { week: 'WK28' };
+const PLAN_WEEKS = ['WK32','WK33','WK34','WK35'];
+const PLAN_WEEK_COLS = { WK32:['wk32_meta','wk32_desp'], WK33:['wk33_meta','wk33_desp'], WK34:['wk34_meta','wk34_desp'], WK35:['wk35_meta','wk35_desp'] };
+
+function planRowsAsObjects(){
+  const f = RAW.planificacion.fields;
+  return RAW.planificacion.rows.map(r=>{
+    const o = {};
+    f.forEach((name,i)=> o[name]=r[i]);
+    return o;
+  });
+}
+
+function renderPlanificacionTab(){
+  const rows = planRowsAsObjects();
+
+  if(!PLAN_WEEKS.includes(planState.week)) planState.week = PLAN_WEEKS[0];
+
+  const weekSel = document.getElementById('planWeekSelect');
+  if(weekSel){
+    weekSel.innerHTML = PLAN_WEEKS.map(w=>`<button data-w="${w}" class="${w===planState.week?'active':''}">${w}</button>`).join('');
+    weekSel.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click', ()=>{ planState.week = b.dataset.w; renderPlanificacionTab(); });
+    });
+  }
+
+  const [metaKey, despKey] = PLAN_WEEK_COLS[planState.week];
+  const rowsCalc = rows.map(r=>{
+    const metaSemana = r[metaKey] || 0;
+    const despachado = r[despKey] || 0;
+    const pendiente = metaSemana - despachado;
+    return { negocio:r.negocio, producto:r.producto, metaSemana, despachado, pendiente };
+  });
+
+  const metaSemanaTotal = rowsCalc.reduce((s,x)=>s+x.metaSemana,0);
+  const despachadoSemanaTotal = rowsCalc.reduce((s,x)=>s+x.despachado,0);
+  const pendienteSemanaTotal = metaSemanaTotal - despachadoSemanaTotal;
+  const avanceSemana = metaSemanaTotal ? despachadoSemanaTotal/metaSemanaTotal : 0;
+
+  document.getElementById('planKpiRow').innerHTML = `
+    <div class="kpi-card"><div class="lbl">Meta ${planState.week}</div><div class="val">${fmtNum(metaSemanaTotal)}</div></div>
+    <div class="kpi-card"><div class="lbl">Despachado ${planState.week}</div><div class="val" style="color:${COLORS.green}">${fmtNum(despachadoSemanaTotal)}</div></div>
+    <div class="kpi-card"><div class="lbl">Pendiente por despachar ${planState.week}</div><div class="val" style="color:${pendienteSemanaTotal>0?COLORS.amber:COLORS.green}">${fmtNum(Math.max(pendienteSemanaTotal,0))}</div></div>
+    <div class="kpi-card"><div class="lbl">Avance real ${planState.week}</div><div class="val">${fmtPct(avanceSemana)}</div></div>
+  `;
+
+  const noteEl = document.getElementById('planWeekNote');
+  if(noteEl){
+    if(despachadoSemanaTotal === 0 && metaSemanaTotal > 0){
+      noteEl.style.display = '';
+      noteEl.textContent = `⚠ Aún no hay despachos registrados para ${planState.week} — probablemente es una semana futura. El 100% aparece como pendiente hasta que se despache.`;
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
+
+  const weekTotals = PLAN_WEEKS.map(w => rows.reduce((s,r)=>s+(r[PLAN_WEEK_COLS[w][0]]||0),0));
+  const weekDespachados = PLAN_WEEKS.map(w => rows.reduce((s,r)=>s+(r[PLAN_WEEK_COLS[w][1]]||0),0));
+  destroyChart('planWeeks');
+  charts.planWeeks = new Chart(document.getElementById('chartPlanWeeks'), {
+    type:'bar',
+    data:{ labels:PLAN_WEEKS, datasets:[
+      { label:'Meta planificada', data:weekTotals, backgroundColor:COLORS.amber, borderRadius:4, maxBarThickness:44 },
+      { label:'Despachado real', data:weekDespachados, backgroundColor:COLORS.green, borderRadius:4, maxBarThickness:44 },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{boxWidth:12}}, datalabels:dl({anchor:'end', align:'top'})}, scales:{ x:{grid:{display:false}}, y:{grid:{color:COLORS.grid}, beginAtZero:true, grace:'12%'} } }
+  });
+
+  destroyChart('planPct');
+  const pctVals = PLAN_WEEKS.map((w,i)=> weekTotals[i] ? (weekDespachados[i]/weekTotals[i])*100 : 0);
+  charts.planPct = new Chart(document.getElementById('chartPlanPct'), {
+    type:'line',
+    data:{ labels:PLAN_WEEKS, datasets:[{ label:'% avance real', data:pctVals, borderColor:COLORS.green, backgroundColor:'rgba(76,201,154,.15)', fill:true, tension:.35, pointBackgroundColor:COLORS.green }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, datalabels:dl({align:'top', color:COLORS.green, formatter:(v)=>v.toFixed(0)+'%'})}, scales:{ y:{ min:0, ticks:{ callback:v=>v+'%' }, grid:{color:COLORS.grid}, grace:'15%' }, x:{grid:{display:false}} } }
+  });
+
+  const maxMeta = Math.max(...rowsCalc.map(x=>Math.max(x.metaSemana,x.despachado)), 1);
+  document.getElementById('planList').innerHTML = rowsCalc.map(x=>{
+    const pctBar = Math.min(100, (x.despachado/maxMeta)*100);
+    const pendColor = x.pendiente > 0 ? COLORS.amber : COLORS.green;
+    const pendLabel = x.pendiente > 0 ? `${fmtNum(x.pendiente)} pendientes` : (x.pendiente < 0 ? `${fmtNum(-x.pendiente)} sobre meta` : 'Meta cumplida');
+    return `<div class="plan-row">
+      <span class="tag ${x.negocio==='VTR'?'vtr':'claro'}">${x.negocio}</span>
+      <span class="prod">${x.producto}<div class="progress-track" style="margin-top:6px;"><div class="progress-fill" style="width:${pctBar}%; background:${x.pendiente>0?'linear-gradient(90deg,var(--amber-dim),var(--amber))':'linear-gradient(90deg,#2d6b53,var(--green))'}"></div></div></span>
+      <span class="meta-val">meta ${planState.week}: ${fmtNum(x.metaSemana)} · desp: ${fmtNum(x.despachado)}</span>
+      <span class="pct" style="color:${pendColor}">${pendLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===================== HORARIOS TAB =====================
+let horariosState = { weekIdx: 0 };
+const DAY_NAMES = ['LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES'];
+const MONTH_NAMES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+
+function renderHorariosTab(){
+  const weeks = RAW.horarios;
+  const sel = document.getElementById('weekSelect');
+  sel.innerHTML = weeks.map((w,i)=>`<button data-i="${i}" class="${i===horariosState.weekIdx?'active':''}">Semana ${w.week}</button>`).join('');
+  sel.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      horariosState.weekIdx = parseInt(b.dataset.i);
+      renderHorariosTab();
+    });
+  });
+  const w = weeks[horariosState.weekIdx];
+  if(!w){ document.getElementById('dayGrid').innerHTML = '<div class="empty-state">Sin datos de horarios</div>'; return; }
+  document.getElementById('weekLabel').textContent = `Semana ${w.week}`;
+  document.getElementById('dayGrid').innerHTML = w.dates.map((d, i)=>{
+    if(!d) return `<div class="day-card"><div class="dname">${DAY_NAMES[i]}</div><div class="slot-empty">Sin fecha</div></div>`;
+    const dt = new Date(d+'T00:00:00');
+    const day = dt.getDate();
+    const month = MONTH_NAMES[dt.getMonth()];
+    const slots = [w.notes1[i], w.notes2[i]].filter(Boolean);
+    return `<div class="day-card">
+      <div class="dname">${DAY_NAMES[i]}</div>
+      <div class="ddate">${day}</div>
+      <div class="dmonth">${month}</div>
+      <div class="slots">
+        ${slots.length ? slots.map(s=>`<div class="slot-tag">⏱ ${s}</div>`).join('') : '<div class="slot-empty">Sin ventana asignada</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===================== COMPARATIVO (VIEW) TAB =====================
+// ===================== FACTURACION TAB =====================
+function renderFacturacionTab(){
+  const f = RAW.facturacion;
+  if(!f){ return; }
+  const rows = f.rows; // [NEGOCIO, NIVEL, FACTURACION(unit), Cuenta de UA, Suma de FACTURACION, Cuenta de FACTURACION(%)]
+  const total = f.total; // ['Total general', null, null, cuentaUA, sumaFacturacion, 1]
+
+  const totalUA = total[3];
+  const totalSuma = total[4];
+
+  document.getElementById('factKpiRow').innerHTML = `
+    <div class="kpi-card"><div class="lbl">Total unidades facturadas</div><div class="val">${fmtNum(totalUA)}</div></div>
+    <div class="kpi-card"><div class="lbl">Suma facturación total</div><div class="val" style="font-size:22px;">${fmtMoney(totalSuma)}</div></div>
+    <div class="kpi-card"><div class="lbl">Precios distintos</div><div class="val">${rows.length}</div></div>
+  `;
+
+  const byNegocio = {};
+  rows.forEach(r=>{ byNegocio[r[0]] = (byNegocio[r[0]]||0) + (r[4]||0); });
+  destroyChart('factNegocio');
+  charts.factNegocio = new Chart(document.getElementById('chartFactNegocio'), {
+    type:'bar',
+    data:{ labels:Object.keys(byNegocio), datasets:[{ label:'Suma facturación', data:Object.values(byNegocio), backgroundColor:[COLORS.vtr, COLORS.claro], borderRadius:4, maxBarThickness:70 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, datalabels:dl({anchor:'end', align:'top', formatter:(v)=>fmtMoney(v)})}, scales:{ x:{grid:{display:false}}, y:{grid:{color:COLORS.grid}, beginAtZero:true, grace:'12%'} } }
+  });
+
+  destroyChart('factPart');
+  charts.factPart = new Chart(document.getElementById('chartFactPart'), {
+    type:'doughnut',
+    data:{ labels: rows.map(r=>`${r[0]} N${r[1]} · $${fmtNum(r[2])}`), datasets:[{ data: rows.map(r=>r[5]), backgroundColor:COLORS.palette, borderColor:'#141d2b', borderWidth:2 }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:9.5}}}, datalabels:dl({color:'#0d1420', font:{size:10, weight:'700'}, formatter:(v)=>fmtPct(v)})} }
+  });
+
+  document.getElementById('factBody').innerHTML = rows.map(r=>`
+    <tr>
+      <td><span class="tag ${r[0]==='VTR'?'vtr':'claro'}">${r[0]}</span></td>
+      <td>${r[1]}</td>
+      <td>${fmtMoney(r[2])}</td>
+      <td>${fmtNum(r[3])}</td>
+      <td>${fmtMoney(r[4])}</td>
+      <td>${fmtPct(r[5])}</td>
+    </tr>`).join('');
+}
+
+// ===================== MASTER RENDER =====================
+function renderAll(){
+  renderDespachosTab();
+  renderPlanificacionTab();
+  renderHorariosTab();
+  renderFacturacionTab();
+  document.getElementById('lastUpdate').textContent = 'Última actualización: ' + new Date().toLocaleString('es-CL');
+}
+
+// ===================== FILE UPLOAD / PARSING =====================
+function excelDateToStr(v){
+  if(v instanceof Date){
+    const y=v.getFullYear(), m=String(v.getMonth()+1).padStart(2,'0'), d=String(v.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  return v;
+}
+
+function parseDespachosSheet(wb){
+  const ws = wb.Sheets['DESPACHOS'];
+  if(!ws) return null;
+  const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+  const headers = arr[0].slice(0,25);
+  const rows = [];
+  for(let i=1;i<arr.length;i++){
+    const row = arr[i];
+    if(!row || row[0]==null) continue;
+    const trimmed = row.slice(0,25).map(v=> v instanceof Date ? excelDateToStr(v) : v);
+    rows.push(trimmed);
+  }
+  return { headers, rows };
+}
+
+function parsePlanificacionSheet(wb){
+  const ws = wb.Sheets['PLANIFICACION'];
+  if(!ws) return null;
+  const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+
+  // 1) Ubicar la fila de encabezado buscando la celda "Negocio" (en vez de asumir fila 2)
+  let headerRowIdx = -1, negocioCol = -1;
+  for(let r=0; r<arr.length; r++){
+    const row = arr[r] || [];
+    const c = row.findIndex(v=> typeof v==='string' && v.trim().toLowerCase()==='negocio');
+    if(c !== -1){ headerRowIdx = r; negocioCol = c; break; }
+  }
+  if(headerRowIdx === -1) return null;
+  const headerRow = arr[headerRowIdx] || [];
+
+  const findCol = (matchFn) => {
+    for(let c=0;c<headerRow.length;c++){
+      const v = headerRow[c];
+      if(typeof v==='string' && matchFn(v.trim().toLowerCase())) return c;
+    }
+    return -1;
+  };
+
+  // "Producto" y la meta anual no tienen un encabezado propio confiable (celdas
+  // combinadas/tituladas distinto), así que se ubican por posición relativa fija
+  // respecto a "Negocio", que sí es estable. El resto se ubica por nombre.
+  const productoCol = negocioCol + 1;
+  const metaCol     = negocioCol + 2;
+
+  const wk32MetaCol = findCol(v=>v.includes('wk32') && !v.includes('desp'));
+  const wk32DespCol = findCol(v=>v.includes('wk32') && v.includes('desp'));
+  const wk33MetaCol = findCol(v=>v.includes('wk33') && !v.includes('desp'));
+  const wk33DespCol = findCol(v=>v.includes('wk33') && v.includes('desp'));
+  const wk34MetaCol = findCol(v=>v.includes('wk34') && !v.includes('desp'));
+  const wk34DespCol = findCol(v=>v.includes('wk34') && v.includes('desp'));
+  const wk35MetaCol = findCol(v=>v.includes('wk35') && !v.includes('desp'));
+  const wk35DespCol = findCol(v=>v.includes('wk35') && v.includes('desp'));
+  const totalCol    = findCol(v=>v==='total' || v.includes('total'));
+  const faltanteCol = findCol(v=>v.includes('faltante'));
+  const pctCol      = findCol(v=>v==='%' || v.includes('avance'));
+
+  const fields = ['negocio','producto','meta2026','wk32_meta','wk32_desp','wk33_meta','wk33_desp','wk34_meta','wk34_desp','wk35_meta','wk35_desp','total_desp','faltante','pct'];
+  const colMap = [negocioCol, productoCol, metaCol, wk32MetaCol, wk32DespCol, wk33MetaCol, wk33DespCol, wk34MetaCol, wk34DespCol, wk35MetaCol, wk35DespCol, totalCol, faltanteCol, pctCol];
+
+  // 2) Leer filas de datos hasta que ya no haya producto (soporta más o menos
+  // productos que antes, y celdas de "Negocio" combinadas/vacías en filas repetidas)
+  const rows = [];
+  let lastNeg = null;
+  let r = headerRowIdx + 1;
+  for(; r<arr.length; r++){
+    const row = arr[r] || [];
+    const prod = row[productoCol];
+    if(prod==null || String(prod).trim()==='') break;
+    let neg = row[negocioCol];
+    if(neg==null || String(neg).trim()===''){ neg = lastNeg; } else { lastNeg = neg; }
+    rows.push(colMap.map(c => c===-1 ? null : (c===negocioCol ? neg : row[c])));
+  }
+  const totalRowArr = arr[r] || [];
+  const total = colMap.map(c=> c===-1 ? null : totalRowArr[c]);
+
+  return { fields, rows, total };
+}
+
+function parseHorariosSheet(wb){
+  const ws = wb.Sheets['HORARIOS DE ENTREGA'];
+  if(!ws) return null;
+  const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+
+  // 1) Ubicar fila de encabezado buscando "SEMANA"
+  let headerRowIdx = -1, semanaCol = -1;
+  for(let r=0;r<arr.length;r++){
+    const row = arr[r] || [];
+    const c = row.findIndex(v=> typeof v==='string' && v.trim().toLowerCase()==='semana');
+    if(c !== -1){ headerRowIdx = r; semanaCol = c; break; }
+  }
+  if(headerRowIdx === -1) return null;
+  const headerRow = arr[headerRowIdx] || [];
+
+  const dayNamesNorm = ['lunes','martes','miercoles','jueves','viernes'];
+  const dayCols = dayNamesNorm.map(name=>{
+    for(let c=0;c<headerRow.length;c++){
+      const v = headerRow[c];
+      if(typeof v==='string' && v.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')===name) return c;
+    }
+    return -1;
+  });
+
+  // 2) Recorrer filas debajo del encabezado: una fila con número en la columna
+  // "SEMANA" abre un bloque; las filas siguientes (hasta la próxima semana o el
+  // fin de la hoja) son notas/ventanas horarias de esa semana.
+  const weeks = [];
+  let r = headerRowIdx + 1;
+  while(r < arr.length){
+    const row = arr[r] || [];
+    const wk = row[semanaCol];
+    if(wk==null || wk===''){ r++; continue; }
+    const dates = dayCols.map(c=> c===-1 ? null : excelDateToStr(row[c]));
+    const noteRows = [];
+    let r2 = r + 1;
+    while(r2 < arr.length){
+      const nextRow = arr[r2] || [];
+      const nextWk = nextRow[semanaCol];
+      if(nextWk!=null && nextWk!=='') break; // llegó la siguiente semana
+      noteRows.push(dayCols.map(c=> c===-1 ? null : nextRow[c]));
+      r2++;
+    }
+    weeks.push({ week:wk, dates, notes1: noteRows[0]||[], notes2: noteRows[1]||[] });
+    r = r2;
+  }
+  return weeks;
+}
+
+function parseFacturacionSheet(wb){
+  const ws = wb.Sheets['FACTURACION'];
+  if(!ws) return null;
+  const arr = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+
+  const wanted = ['negocio','nivel','facturacion','cuenta de ua','suma de facturacion','cuenta de facturacion'];
+  let headerRowIdx = -1;
+  const colOf = {};
+  for(let r=0;r<arr.length;r++){
+    const row = arr[r] || [];
+    const norm = row.map(v=> typeof v==='string' ? v.trim().toLowerCase() : v);
+    if(norm.includes('negocio') && norm.includes('nivel')){
+      headerRowIdx = r;
+      wanted.forEach(w=>{ colOf[w] = norm.findIndex(v=>v===w); });
+      break;
+    }
+  }
+  if(headerRowIdx === -1) return null;
+
+  const header = wanted.map(w=> arr[headerRowIdx][colOf[w]]);
+  const rows = [];
+  let total = [];
+  for(let r=headerRowIdx+1; r<arr.length; r++){
+    const row = arr[r] || [];
+    const negVal = row[colOf['negocio']];
+    if(negVal==null || String(negVal).trim()==='') continue;
+    if(String(negVal).trim().toLowerCase()==='total general'){
+      total = wanted.map(w=> row[colOf[w]]);
+      break;
+    }
+    rows.push(wanted.map(w=> row[colOf[w]]));
+  }
+  return { header, rows, total };
+}
+
+// ===================== SINCRONIZACIÓN COMPARTIDA (FIREBASE) =====================
+// 1) Crea un proyecto gratis en https://console.firebase.google.com
+// 2) Activa "Realtime Database" en modo de prueba (o con reglas {".read":true,".write":true})
+// 3) Copia la URL de tu base de datos (ej: https://tu-proyecto-default-rtdb.firebaseio.com)
+// 4) Pégala abajo reemplazando el texto entre comillas. Vuelve a subir este archivo a GitHub.
+const FIREBASE_DB_URL = 'https://centro-de-despacho-default-rtdb.firebaseio.com/';
+
+// ===================== AUTENTICACIÓN (LOGIN ADMIN) =====================
+const FIREBASE_API_KEY = 'AIzaSyAFLqsL9X7THcu7Ut-tYwf1mvSrGKBxe8Q';
+const AUTH_TOKEN_KEY = 'centro_despachos_auth_token';
+let idToken = (function(){ try{ return sessionStorage.getItem(AUTH_TOKEN_KEY); }catch(e){ return null; } })();
+
+function estaLogueado(){ return !!idToken; }
+
+async function iniciarSesion(){
+  const email = prompt('Correo:');
+  if(!email) return;
+  const pass = prompt('Contraseña:');
+  if(!pass) return;
+  try{
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+      method: 'POST',
+      body: JSON.stringify({ email, password: pass, returnSecureToken: true })
+    });
+    const data = await res.json();
+    if(data.idToken){
+      idToken = data.idToken;
+      try{ sessionStorage.setItem(AUTH_TOKEN_KEY, idToken); }catch(e){}
+      actualizarBotonLogin();
+      await recargarTrasCambioDeSesion();
+      alert('Sesión iniciada.');
+    } else {
+      alert('Credenciales incorrectas.');
+    }
+  }catch(e){
+    alert('Error al iniciar sesión: ' + e.message);
+  }
+}
+
+async function cerrarSesion(){
+  idToken = null;
+  try{ sessionStorage.removeItem(AUTH_TOKEN_KEY); }catch(e){}
+  if(syncTimer){ clearInterval(syncTimer); syncTimer = null; }
+  actualizarBotonLogin();
+  await recargarTrasCambioDeSesion();
+}
+
+// Vuelve a cargar la vista respetando el estado de sesión actual
+async function recargarTrasCambioDeSesion(){
+  const saved = await cargarUltimaCargaGuardada();
+  if(saved && saved.despachos && saved.despachos.rows && saved.despachos.rows.length){
+    RAW = saved;
+  } else {
+    RAW = JSON.parse(JSON.stringify(ORIGINAL));
+  }
+  renderAll();
+  actualizarBadgeNube(nubeConfigurada() ? (estaLogueado() ? 'ok' : null) : null);
+  iniciarSincronizacionAutomatica();
+}
+
+function actualizarBotonLogin(){
+  const btn = document.getElementById('btn-login');
+  if(!btn) return;
+  btn.textContent = estaLogueado() ? 'Cerrar sesión' : 'Iniciar sesión';
+}
+
+const STORAGE_KEY = 'despachos_dashboard_last_upload_v1';
+const SYNC_POLL_MS = 15000; // revisa cambios de otros usuarios cada 15s
+let lastRemoteStamp = null;
+let syncTimer = null;
+
+function nubeConfigurada(){
+  return FIREBASE_DB_URL && FIREBASE_DB_URL.indexOf('https://') === 0;
+}
+
+function remoteUrl(){
+  return FIREBASE_DB_URL.replace(/\/$/,'') + '/despachos_dashboard.json';
+}
+function remoteUrlAutenticada(){
+  return remoteUrl() + (idToken ? '?auth=' + idToken : '');
+}
+
+async function guardarUltimaCarga(raw){
+  const payload = { ...raw, _stamp: Date.now(), _by: (window.__clienteId || (window.__clienteId = Math.random().toString(36).slice(2))) };
+  // Guarda siempre una copia local (respaldo / modo sin nube)
+  try{
+    if(window.storage && typeof window.storage.set === 'function'){
+      await window.storage.set(STORAGE_KEY, JSON.stringify(payload), false);
+    } else if(window.localStorage){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+  }catch(err){ console.error('No se pudo guardar copia local', err); }
+
+  if(!nubeConfigurada()) return { synced:false };
+  try{
+    if(!estaLogueado()){ return { synced:false, error:'no-auth' }; }
+    const res = await fetch(remoteUrlAutenticada(), { method:'PUT', body: JSON.stringify(payload) });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    lastRemoteStamp = payload._stamp;
+    return { synced:true };
+  }catch(err){
+    console.error('No se pudo sincronizar con la nube', err);
+    return { synced:false, error:err };
+  }
+}
+
+async function cargarUltimaCargaGuardada(){
+  // Acceso restringido: sin sesión iniciada no se lee la nube ni el respaldo local
+  // (así no queda a la vista la última carga real en un equipo compartido).
+  if(nubeConfigurada() && !estaLogueado()){
+    return null;
+  }
+  if(nubeConfigurada()){
+    try{
+      const res = await fetch(remoteUrlAutenticada(), { cache:'no-store' });
+      if(res.ok){
+        const data = await res.json();
+        if(data && data.despachos){ lastRemoteStamp = data._stamp || null; return data; }
+      }
+    }catch(err){ console.error('No se pudo leer la nube, se intenta copia local', err); }
+  }
+  try{
+    if(window.storage && typeof window.storage.get === 'function'){
+      const res = await window.storage.get(STORAGE_KEY);
+      return res && res.value ? JSON.parse(res.value) : null;
+    } else if(window.localStorage){
+      const v = localStorage.getItem(STORAGE_KEY);
+      return v ? JSON.parse(v) : null;
+    }
+  }catch(err){ return null; }
+  return null;
+}
+
+async function borrarUltimaCargaGuardada(){
+  if(!estaLogueado()){
+    toast('Debes iniciar sesión para restaurar/borrar la carga en la nube.', true);
+    return;
+  }
+  try{
+    if(window.storage && typeof window.storage.delete === 'function'){
+      await window.storage.delete(STORAGE_KEY);
+    } else if(window.localStorage){
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }catch(err){ /* noop */ }
+  if(nubeConfigurada()){
+    try{ await fetch(remoteUrlAutenticada(), { method:'DELETE' }); }catch(err){ /* noop */ }
+  }
+}
+
+function actualizarBadgeNube(estado){
+  const dot = document.getElementById('statusDot');
+  if(!dot) return;
+  if(!nubeConfigurada()){
+    dot.style.background = 'var(--ink-faint)'; dot.style.boxShadow = 'none';
+  } else if(estado==='ok'){
+    dot.style.background = 'var(--green)'; dot.style.boxShadow = '0 0 8px var(--green)';
+  } else {
+    dot.style.background = 'var(--claro)'; dot.style.boxShadow = '0 0 8px var(--claro)';
+  }
+}
+
+// Revisa periódicamente si otra persona subió datos nuevos, y refresca sin recargar la página
+function iniciarSincronizacionAutomatica(){
+  if(!nubeConfigurada() || syncTimer || !estaLogueado()) return;
+  syncTimer = setInterval(async ()=>{
+    if(!estaLogueado()) return;
+    try{
+      const res = await fetch(remoteUrlAutenticada(), { cache:'no-store' });
+      if(!res.ok) return;
+      const data = await res.json();
+      if(data && data.despachos && data._stamp && data._stamp !== lastRemoteStamp){
+        lastRemoteStamp = data._stamp;
+        RAW = data;
+        renderAll();
+        actualizarBadgeNube('ok');
+        toast('Se detectaron datos nuevos cargados por otra persona — vista actualizada.');
+      }
+    }catch(err){ actualizarBadgeNube('error'); }
+  }, SYNC_POLL_MS);
+  window.addEventListener('focus', async ()=>{
+    if(!estaLogueado()) return;
+    try{
+      const res = await fetch(remoteUrlAutenticada(), { cache:'no-store' });
+      if(!res.ok) return;
+      const data = await res.json();
+      if(data && data.despachos && data._stamp && data._stamp !== lastRemoteStamp){
+        lastRemoteStamp = data._stamp;
+        RAW = data;
+        renderAll();
+        toast('Vista actualizada con la última carga disponible.');
+      }
+    }catch(err){ /* noop */ }
+  });
+}
+
+document.getElementById('btn-login').addEventListener('click', ()=>{ estaLogueado() ? cerrarSesion() : iniciarSesion(); });
+actualizarBotonLogin();
+
+document.getElementById('fileInput').addEventListener('change', (e)=>{
+  if(!estaLogueado()){
+    toast('Debes iniciar sesión para cargar un archivo nuevo.', true);
+    e.target.value = '';
+    return;
+  }
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt)=>{
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+
+      const newDespachos = parseDespachosSheet(wb);
+      const newPlan = parsePlanificacionSheet(wb);
+      const newHorarios = parseHorariosSheet(wb);
+      const newFact = parseFacturacionSheet(wb);
+
+      let updated = [];
+      if(newDespachos && newDespachos.rows.length){ RAW.despachos = newDespachos; updated.push('Despachos'); }
+      if(newPlan && newPlan.rows.length){ RAW.planificacion = newPlan; updated.push('Planificación'); }
+      if(newHorarios && newHorarios.length){ RAW.horarios = newHorarios; updated.push('Horarios'); }
+      if(newFact && newFact.rows.length){ RAW.facturacion = newFact; updated.push('Facturación'); }
+
+      if(updated.length===0){
+        toast('No se encontraron hojas reconocibles (DESPACHOS, PLANIFICACION, HORARIOS DE ENTREGA, FACTURACION) en el archivo.', true);
+        return;
+      }
+
+      renderAll();
+      const r = await guardarUltimaCarga(RAW);
+      if(nubeConfigurada()){
+        actualizarBadgeNube(r.synced ? 'ok' : 'error');
+        document.getElementById('statusText').innerHTML = r.synced
+          ? `Archivo actualizado: <b>${file.name}</b> · sincronizado para todos`
+          : `Archivo actualizado: <b>${file.name}</b> · <span style="color:var(--claro)">no se pudo sincronizar con la nube</span>`;
+        toast(r.synced
+          ? `Datos actualizados desde "${file.name}" — hojas: ${updated.join(', ')}. Ya son visibles para cualquiera que abra el link.`
+          : 'Se actualizó tu vista pero falló la sincronización en la nube. Revisa la URL de Firebase.', !r.synced);
+      } else {
+        document.getElementById('statusText').innerHTML = `Archivo actualizado: <b>${file.name}</b> · guardado solo en este navegador (nube no configurada)`;
+        toast(`Datos actualizados desde "${file.name}" — hojas: ${updated.join(', ')}. Para que otras personas lo vean, configura la sincronización en la nube (ver comentario en el código).`);
+      }
+    }catch(err){
+      console.error(err);
+      toast('Error al leer el archivo. Verifica que sea un Excel válido con la misma estructura.', true);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  RAW = JSON.parse(JSON.stringify(ORIGINAL));
+  renderAll();
+  await borrarUltimaCargaGuardada();
+  document.getElementById('statusText').innerHTML = `Datos originales cargados · <span id="rowCount">${RAW.despachos.rows.length}</span> registros`;
+  toast('Datos originales restaurados para todos.');
+});
+
+// ===================== INIT =====================
+(async function init(){
+  if(nubeConfigurada() && !estaLogueado()){
+    // Sin sesión: no se intenta leer la nube. Se muestra el estado vacío/demo
+    // y se pide iniciar sesión para ver los datos reales.
+    renderAll();
+    actualizarBadgeNube(null);
+    document.getElementById('statusText').innerHTML = 'Inicia sesión para ver los datos sincronizados';
+    return;
+  }
+  try{
+    const saved = await cargarUltimaCargaGuardada();
+    if(saved && saved.despachos && saved.despachos.rows && saved.despachos.rows.length){
+      RAW = saved;
+      renderAll();
+      document.getElementById('statusText').innerHTML = nubeConfigurada()
+        ? `Datos sincronizados desde la nube · <span id="rowCount">${RAW.despachos.rows.length}</span> registros`
+        : `Última carga guardada restaurada (solo este navegador) · <span id="rowCount">${RAW.despachos.rows.length}</span> registros`;
+      actualizarBadgeNube('ok');
+      iniciarSincronizacionAutomatica();
+      return;
+    }
+  }catch(err){
+    console.error('No se pudo restaurar la última carga guardada', err);
+  }
+  renderAll();
+  actualizarBadgeNube(nubeConfigurada() ? 'ok' : null);
+  iniciarSincronizacionAutomatica();
+})();
+
+
+
+</script>
+</body>
+</html>

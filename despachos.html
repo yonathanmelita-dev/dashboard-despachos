@@ -732,8 +732,8 @@ document.getElementById('nextPage').addEventListener('click', ()=>{
 
 // ===================== PLANIFICACION TAB =====================
 let planState = { week: 'WK28' };
-const PLAN_WEEKS = ['WK32','WK33','WK34','WK35'];
-const PLAN_WEEK_COLS = { WK32:['wk32_meta','wk32_desp'], WK33:['wk33_meta','wk33_desp'], WK34:['wk34_meta','wk34_desp'], WK35:['wk35_meta','wk35_desp'] };
+const PLAN_WEEKS = ['WK36','WK37','WK38','WK39'];
+const PLAN_WEEK_COLS = { WK36:['WK36_meta','WK36_desp'], WK37:['WK37_meta','WK37_desp'], WK38:['WK38_meta','WK38_desp'], WK39:['WK39_meta','WK39_desp'] };
 
 function planRowsAsObjects(){
   const f = RAW.planificacion.fields;
@@ -962,20 +962,20 @@ function parsePlanificacionSheet(wb){
   const productoCol = negocioCol + 1;
   const metaCol     = negocioCol + 2;
 
-  const wk32MetaCol = findCol(v=>v.includes('wk32') && !v.includes('desp'));
-  const wk32DespCol = findCol(v=>v.includes('wk32') && v.includes('desp'));
-  const wk33MetaCol = findCol(v=>v.includes('wk33') && !v.includes('desp'));
-  const wk33DespCol = findCol(v=>v.includes('wk33') && v.includes('desp'));
-  const wk34MetaCol = findCol(v=>v.includes('wk34') && !v.includes('desp'));
-  const wk34DespCol = findCol(v=>v.includes('wk34') && v.includes('desp'));
-  const wk35MetaCol = findCol(v=>v.includes('wk35') && !v.includes('desp'));
-  const wk35DespCol = findCol(v=>v.includes('wk35') && v.includes('desp'));
+  const WK36MetaCol = findCol(v=>v.includes('WK36') && !v.includes('desp'));
+  const WK36DespCol = findCol(v=>v.includes('WK36') && v.includes('desp'));
+  const WK37MetaCol = findCol(v=>v.includes('WK37') && !v.includes('desp'));
+  const WK37DespCol = findCol(v=>v.includes('WK37') && v.includes('desp'));
+  const WK38MetaCol = findCol(v=>v.includes('WK38') && !v.includes('desp'));
+  const WK38DespCol = findCol(v=>v.includes('WK38') && v.includes('desp'));
+  const WK39MetaCol = findCol(v=>v.includes('WK39') && !v.includes('desp'));
+  const WK39DespCol = findCol(v=>v.includes('WK39') && v.includes('desp'));
   const totalCol    = findCol(v=>v==='total' || v.includes('total'));
   const faltanteCol = findCol(v=>v.includes('faltante'));
   const pctCol      = findCol(v=>v==='%' || v.includes('avance'));
 
-  const fields = ['negocio','producto','meta2026','wk32_meta','wk32_desp','wk33_meta','wk33_desp','wk34_meta','wk34_desp','wk35_meta','wk35_desp','total_desp','faltante','pct'];
-  const colMap = [negocioCol, productoCol, metaCol, wk32MetaCol, wk32DespCol, wk33MetaCol, wk33DespCol, wk34MetaCol, wk34DespCol, wk35MetaCol, wk35DespCol, totalCol, faltanteCol, pctCol];
+  const fields = ['negocio','producto','meta2026','WK36_meta','WK36_desp','WK37_meta','WK37_desp','WK38_meta','WK38_desp','WK39_meta','WK39_desp','total_desp','faltante','pct'];
+  const colMap = [negocioCol, productoCol, metaCol, WK36MetaCol, WK36DespCol, WK37MetaCol, WK37DespCol, WK38MetaCol, WK38DespCol, WK39MetaCol, WK39DespCol, totalCol, faltanteCol, pctCol];
 
   // 2) Leer filas de datos hasta que ya no haya producto (soporta más o menos
   // productos que antes, y celdas de "Negocio" combinadas/vacías en filas repetidas)

@@ -268,7 +268,7 @@ footer.foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);co
 .toast.error{border-color:var(--claro);}
 </style>
 </head>
-<script id="data-blob" type="application/json">{"despachos": {"headers": ["UA", "SERIE", "UA/CRUCE", "MODELO", "SKU", "ESTADO", "CAJA", "PALLET", "GUIA", "ESTADO SAP", "COMPARACION", "L. CMAC", "L. MTAMAC ", "CENTRO", "ALAMACEN", "REPETIDA 1", "REPETIDA 2", "NEGOCIO", "MES", "FAMILIA", "NIVEL", "SEMANA", "FECHA", "VALOR FAMILIA", "FACTURACION"], "rows": []}, "planificacion": {"fields": ["negocio", "producto", "meta2026", "wk28_meta", "wk28_desp", "wk29_meta", "wk29_desp", "wk30_meta", "wk30_desp", "wk31_meta", "wk31_desp", "total_desp", "faltante", "pct"], "rows": [], "total": [null, null, null, null, null, null, null, null, null, null, null, null, null, null]}, "horarios": [], "facturacion": {"header": ["NEGOCIO", "NIVEL", "FACTURACION", "Cuenta de UA", "Suma de FACTURACION", "Cuenta de FACTURACION"], "rows": [], "total": [null, null, null, null, null, null]}}</script>
+<script id="data-blob" type="application/json">{"despachos": {"headers": ["UA", "SERIE", "UA/CRUCE", "MODELO", "SKU", "ESTADO", "CAJA", "PALLET", "GUIA", "ESTADO SAP", "COMPARACION", "L. CMAC", "L. MTAMAC ", "CENTRO", "ALAMACEN", "REPETIDA 1", "REPETIDA 2", "NEGOCIO", "MES", "FAMILIA", "NIVEL", "SEMANA", "FECHA", "VALOR FAMILIA", "FACTURACION"], "rows": []}, "planificacion": {"fields": ["negocio", "producto", "meta2026", "WK36_meta", "WK36_desp", "WK37_meta", "WK37_desp", "WK38_meta", "WK38_desp", "WK39_meta", "WK39_desp", "total_desp", "faltante", "pct"], "rows": [], "total": [null, null, null, null, null, null, null, null, null, null, null, null, null, null]}, "horarios": [], "facturacion": {"header": ["NEGOCIO", "NIVEL", "FACTURACION", "Cuenta de UA", "Suma de FACTURACION", "Cuenta de FACTURACION"], "rows": [], "total": [null, null, null, null, null, null]}}</script>
 <body>
 <div class="manifest-strip"></div>
 <div class="wrap">
@@ -731,7 +731,7 @@ document.getElementById('nextPage').addEventListener('click', ()=>{
 });
 
 // ===================== PLANIFICACION TAB =====================
-let planState = { week: 'WK28' };
+let planState = { week: 'WK36' };
 const PLAN_WEEKS = ['WK36','WK37','WK38','WK39'];
 const PLAN_WEEK_COLS = { WK36:['WK36_meta','WK36_desp'], WK37:['WK37_meta','WK37_desp'], WK38:['WK38_meta','WK38_desp'], WK39:['WK39_meta','WK39_desp'] };
 

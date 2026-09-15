@@ -962,14 +962,14 @@ function parsePlanificacionSheet(wb){
   const productoCol = negocioCol + 1;
   const metaCol     = negocioCol + 2;
 
-  const WK36MetaCol = findCol(v=>v.includes('WK36') && !v.includes('desp'));
-  const WK36DespCol = findCol(v=>v.includes('WK36') && v.includes('desp'));
-  const WK37MetaCol = findCol(v=>v.includes('WK37') && !v.includes('desp'));
-  const WK37DespCol = findCol(v=>v.includes('WK37') && v.includes('desp'));
-  const WK38MetaCol = findCol(v=>v.includes('WK38') && !v.includes('desp'));
-  const WK38DespCol = findCol(v=>v.includes('WK38') && v.includes('desp'));
-  const WK39MetaCol = findCol(v=>v.includes('WK39') && !v.includes('desp'));
-  const WK39DespCol = findCol(v=>v.includes('WK39') && v.includes('desp'));
+const WK36MetaCol = findCol(v=>v.includes('wk36') && !v.includes('desp'));
+const WK36DespCol = findCol(v=>v.includes('wk36') && v.includes('desp'));
+const WK37MetaCol = findCol(v=>v.includes('wk37') && !v.includes('desp'));
+const WK37DespCol = findCol(v=>v.includes('wk37') && v.includes('desp'));
+const WK38MetaCol = findCol(v=>v.includes('wk38') && !v.includes('desp'));
+const WK38DespCol = findCol(v=>v.includes('wk38') && v.includes('desp'));
+const WK39MetaCol = findCol(v=>v.includes('wk39') && !v.includes('desp'));
+const WK39DespCol = findCol(v=>v.includes('wk39') && v.includes('desp'));
   const totalCol    = findCol(v=>v==='total' || v.includes('total'));
   const faltanteCol = findCol(v=>v.includes('faltante'));
   const pctCol      = findCol(v=>v==='%' || v.includes('avance'));
